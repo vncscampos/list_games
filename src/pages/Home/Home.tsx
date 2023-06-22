@@ -6,9 +6,9 @@ import Card from "react-bootstrap/Card";
 import Spinner from "react-bootstrap/Spinner";
 
 import banner from "../../assets/banner.png";
-// import api from "../../services/api";
-import { Container, Content, SearchBar, List } from "./styles";
-import api from "../../services/api.json";
+import api from "../../services/api";
+import { Container, Content, List, Filter } from "./styles";
+import data from "../../services/api.json";
 
 interface IGame {
   id: number;
@@ -26,28 +26,52 @@ interface IGame {
 
 const Home = () => {
   const [searchValue, setSearchValue] = useState("");
-  const [loading, setloading] = useState(false);
-  const [games, setGameList] = useState<IGame[]>(api);
+  const [loading, setLoading] = useState(false);
+  const [games, setGameList] = useState<IGame[]>(data);
+
+  const genresArray: { id: number; genre: string }[] = [
+    { id: 0, genre: "Shooter" },
+    { id: 1, genre: "MMOARPG" },
+    { id: 2, genre: "ARPG" },
+    { id: 3, genre: "Fighting" },
+    { id: 4, genre: "Action RPG" },
+    { id: 5, genre: "Battle Royale" },
+    { id: 6, genre: "MMORPG" },
+    { id: 7, genre: "MOBA" },
+    { id: 8, genre: "Sports" },
+    { id: 9, genre: "Racing" },
+    { id: 10, genre: "Card Game" },
+    { id: 11, genre: "Strategy" },
+    { id: 12, genre: "MMO" },
+    { id: 13, genre: "Social" },
+    { id: 14, genre: "Fantasy" },
+  ];
 
   useEffect(() => {
-    console.log(games);
     // loadList();
   }, []);
 
+  function loadingGenres() {
+    const genres: string[] = games?.map((game) => game.genre) || [];
+    const uniqueGenres: Set<string> = new Set(genres);
+    // setGenres([...uniqueGenres]);
+  }
+
   async function loadList() {
-    // await api
-    //   .get("/data", {
-    //     headers: {
-    //       "dev-email-address": "dev@email.com",
-    //     },
-    //   })
-    //   .then((res) => {
-    //     console.log(res.data);
-    //     setGameList(res.data);
-    //   })
-    //   .catch((err) => {
-    //     console.error(err);
-    //   });
+    await api
+      .get("/data", {
+        headers: {
+          "dev-email-address": "dev@email.com",
+        },
+      })
+      .then((res) => {
+        setGameList(res.data);
+        loadingGenres();
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+    setLoading(false);
   }
 
   return (
@@ -56,19 +80,31 @@ const Home = () => {
         <div className="banner">
           <img src={banner} alt="banner" />
         </div>
-        <SearchBar>
-          <InputGroup className="mb-3 search-bar">
-            <InputGroup.Text className="search-icon">
-              <FaSearch />
-            </InputGroup.Text>
-            <Form.Control
-              className="search-input"
-              placeholder="Pesquise pelo nome do jogo"
-              aria-label="Pesquise pelo nome do jogo"
-              aria-describedby="basic-addon2"
-            />
-          </InputGroup>
-        </SearchBar>
+        <Filter>
+          <div className="search-bar">
+            <InputGroup className="mb-3 search-input">
+              <InputGroup.Text className="search-icon">
+                <FaSearch />
+              </InputGroup.Text>
+              <Form.Control
+                className="search-input"
+                placeholder="Pesquise pelo nome do jogo"
+                aria-label="Pesquise pelo nome do jogo"
+                aria-describedby="basic-addon2"
+              />
+            </InputGroup>
+          </div>
+          <Form.Select aria-label="select-genre" className="select-genres">
+            <option>Gênero</option>
+            {genresArray.map((g) => {
+              return (
+                <option key={g.id} value={g.id}>
+                  {g.genre}
+                </option>
+              );
+            })}
+          </Form.Select>
+        </Filter>
       </header>
       <Content>
         {loading ? (
@@ -77,9 +113,9 @@ const Home = () => {
           </>
         ) : (
           <List>
-            {api.map((game) => {
+            {games?.map((game) => {
               return (
-                <Card style={{ width: "18rem" }} className="card">
+                <Card style={{ width: "18rem" }} className="card" key={game.id}>
                   <Card.Img
                     variant="top"
                     src={game.thumbnail}

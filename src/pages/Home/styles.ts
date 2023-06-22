@@ -7,47 +7,68 @@ export const Container = styled.div`
   }
 `;
 
-export const SearchBar = styled.div`
-  display: flex;
-  justify-content: center;
-  margin-top: -20px;
+export const Filter = styled.div`
+  margin: -20px 10% 0 10%;
 
-  .search-icon {
-    background-color: #45456c;
-    border: none;
-    color: #d1d1d1;
+  display: grid;
+  grid-template-columns: 8fr 4fr;
+  justify-items: center;
+  gap: 1rem;
+  
+  .search-bar {
+    width: 100%;
+    .search-icon {
+      background-color: #45456c;
+      border: none;
+      color: #d1d1d1;
+    }
+
+    .search-input {
+      background: #45456c;
+      border-radius: 4px;
+      border: none;
+      color: #d1d1d1;
+      font-weight: 700;
+    }
+
+    .search-input::placeholder {
+      color: #d1d1d1;
+    }
+
+    .search-bar {
+      height: 2.5rem;
+      box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
+    }
   }
 
-  .search-input {
+  .select-genres {
+    width: 100%;
     background: #45456c;
     border-radius: 4px;
     border: none;
     color: #d1d1d1;
     font-weight: 700;
-  }
-
-  .search-input::placeholder {
-    color: #d1d1d1;
-  }
-
-  .search-bar {
-    margin: 0 15% 0 15%;
-    height: 2.5rem;
-    box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
+    height: 2.25rem;
   }
 `;
 
 export const Content = styled.div`
-  display: flex;
-  margin: 3rem 15% 5% 15%;
-  
-  justify-content: center;
+  width: 100%;
+  margin: 3rem 0 3rem 0;
 `;
 
 export const List = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  justify-items: center;
+
+  @media (max-width: 890px) {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  @media (max-width: 590px) {
+    grid-template-columns: 1fr;
+  }
 
   .card {
     margin-bottom: 1.5rem;
