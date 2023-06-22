@@ -1,14 +1,16 @@
-import { useState, useEffect } from "react";
+import { AxiosError } from "axios";
+import React, { useState, useEffect } from "react";
 import Form from "react-bootstrap/Form";
 import InputGroup from "react-bootstrap/InputGroup";
 import { FaSearch } from "react-icons/fa";
 import Card from "react-bootstrap/Card";
 import Spinner from "react-bootstrap/Spinner";
+import Image from "react-bootstrap/Image";
 
 import banner from "../../assets/banner.png";
+import errorBanner from "../../assets/error.svg";
 import api from "../../services/api";
-import { Container, Content, List, Filter } from "./styles";
-import data from "../../services/api.json";
+import { Container, Content, List, Filter, Error } from "./styles";
 
 interface IGame {
   id: number;
@@ -25,52 +27,91 @@ interface IGame {
 }
 
 const Home = () => {
-  const [searchValue, setSearchValue] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [games, setGameList] = useState<IGame[]>(data);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [games, setGameList] = useState<IGame[]>([]);
+  const [backupList, setBackupList] = useState<IGame[]>([]);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const genresArray: { id: number; genre: string }[] = [
-    { id: 0, genre: "Shooter" },
-    { id: 1, genre: "MMOARPG" },
-    { id: 2, genre: "ARPG" },
-    { id: 3, genre: "Fighting" },
-    { id: 4, genre: "Action RPG" },
-    { id: 5, genre: "Battle Royale" },
-    { id: 6, genre: "MMORPG" },
-    { id: 7, genre: "MOBA" },
-    { id: 8, genre: "Sports" },
-    { id: 9, genre: "Racing" },
-    { id: 10, genre: "Card Game" },
-    { id: 11, genre: "Strategy" },
-    { id: 12, genre: "MMO" },
-    { id: 13, genre: "Social" },
-    { id: 14, genre: "Fantasy" },
+  const genresArray = [
+    "Shooter",
+    "MMOARPG",
+    "ARPG",
+    "Fighting",
+    "Action RPG",
+    "Battle Royale",
+    "MMORPG",
+    "MOBA",
+    "Sports",
+    "Racing",
+    "Card Game",
+    "Strategy",
+    "MMO",
+    "Social",
+    "Fantasy",
   ];
 
   useEffect(() => {
-    // loadList();
+    loadList();
   }, []);
 
-  function loadingGenres() {
-    const genres: string[] = games?.map((game) => game.genre) || [];
-    const uniqueGenres: Set<string> = new Set(genres);
-    // setGenres([...uniqueGenres]);
+  function handleGenresChange(event: React.ChangeEvent<HTMLSelectElement>) {
+    setGameList(backupList);
+
+    if (event.target.value === "Gênero") return;
+
+    setLoading(true);
+    const newGames = backupList.filter(
+      (game) => game.genre === event.target.value
+    );
+    setGameList(newGames);
+    setLoading(false);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function handleSearch(event: any) {
+    const query = event.target.value;
+    setLoading(true);
+    const newGames = backupList.filter(
+      (game) => game.title.toLowerCase().indexOf(query.toLowerCase()) !== -1
+    );
+    setGameList(newGames);
+    setLoading(false);
   }
 
   async function loadList() {
-    await api
-      .get("/data", {
+    try {
+      const res = await api.get("/data", {
+        timeout: 5000,
         headers: {
           "dev-email-address": "dev@email.com",
         },
-      })
-      .then((res) => {
-        setGameList(res.data);
-        loadingGenres();
-      })
-      .catch((err) => {
-        console.error(err);
       });
+      setGameList(res.data);
+      setBackupList(res.data);
+    } catch (error) {
+      const err = error as AxiosError;
+
+      setError(true);
+      setErrorMessage(
+        "O servidor não conseguirá responder por agora, tente voltar novamente mais tarde."
+      );
+
+      console.log(err)
+      
+      if (err.code === "ECONNABORTED") {
+        setErrorMessage("O servidor demorou para responder, tente mais tarde.");
+      }
+
+      if (err.response) {
+        if (err.response.status >= 500) {
+          setErrorMessage(
+            "O servidor falhou em responder, tente recarregar a página."
+          );
+        }
+      }
+    }
+
     setLoading(false);
   }
 
@@ -91,15 +132,20 @@ const Home = () => {
                 placeholder="Pesquise pelo nome do jogo"
                 aria-label="Pesquise pelo nome do jogo"
                 aria-describedby="basic-addon2"
+                onChange={handleSearch}
               />
             </InputGroup>
           </div>
-          <Form.Select aria-label="select-genre" className="select-genres">
+          <Form.Select
+            aria-label="select-genre"
+            className="select-genres"
+            onChange={handleGenresChange}
+          >
             <option>Gênero</option>
             {genresArray.map((g) => {
               return (
-                <option key={g.id} value={g.id}>
-                  {g.genre}
+                <option key={g} value={g}>
+                  {g}
                 </option>
               );
             })}
@@ -108,9 +154,19 @@ const Home = () => {
       </header>
       <Content>
         {loading ? (
-          <>
+          <Error>
             <Spinner animation="border" variant="light" />
-          </>
+          </Error>
+        ) : error ? (
+          <Error>
+            <h1>{errorMessage}</h1>
+            <Image
+              className="image-error"
+              src={errorBanner}
+              alt="Error"
+              fluid
+            />
+          </Error>
         ) : (
           <List>
             {games?.map((game) => {

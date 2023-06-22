@@ -108,3 +108,23 @@ export const List = styled.div`
     }
   }
 `;
+
+export const Error = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin: 0 10% 0 10%;
+
+  h1 {
+    color: #d1d1d1;
+    font-weight: 700;
+    font-size: 12pt;
+    margin-bottom: 5rem;
+    text-align: center; 
+  }
+
+  .image-error {
+    max-width: 600px;
+  }
+`;
