@@ -1,9 +1,10 @@
 import styled from "styled-components";
 
 export const Container = styled.div`
-  img {
+  .banner-image {
     width: 100%;
     min-height: 5rem;
+    max-height: 450px;
   }
 `;
 
@@ -121,10 +122,12 @@ export const Error = styled.div`
     font-weight: 700;
     font-size: 12pt;
     margin-bottom: 5rem;
-    text-align: center; 
+    text-align: center;
   }
 
   .image-error {
+    width: 100%;
+    min-height: 5rem;
     max-width: 600px;
   }
 `;

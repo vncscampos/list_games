@@ -33,6 +33,9 @@ const Home = () => {
   const [backupList, setBackupList] = useState<IGame[]>([]);
   const [errorMessage, setErrorMessage] = useState("");
 
+  const [searchValue, setSearchValue] = useState("");
+  const [genre, setGenre] = useState("");
+
   const genresArray = [
     "Shooter",
     "MMOARPG",
@@ -57,23 +60,38 @@ const Home = () => {
 
   function handleGenresChange(event: React.ChangeEvent<HTMLSelectElement>) {
     setGameList(backupList);
+    const genre = event.target.value;
 
-    if (event.target.value === "Gênero") return;
+    if (genre === "Gênero") {
+      setGenre("");
+    }
 
     setLoading(true);
-    const newGames = backupList.filter(
-      (game) => game.genre === event.target.value
+    const newGames = backupList.filter((game) =>
+      (game.genre === genre &&
+        (searchValue
+          ? game.title.toLowerCase().indexOf(searchValue.toLowerCase()) !== -1
+          : true)) ||
+      genre === "Gênero"
+        ? game.title.toLowerCase().indexOf(searchValue.toLowerCase()) !== -1
+        : false
     );
     setGameList(newGames);
+    setGenre(genre);
     setLoading(false);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function handleSearch(event: any) {
     const query = event.target.value;
+    setSearchValue(query);
     setLoading(true);
-    const newGames = backupList.filter(
-      (game) => game.title.toLowerCase().indexOf(query.toLowerCase()) !== -1
+    const newGames = backupList.filter((game) =>
+      (game.title.toLowerCase().indexOf(query.toLowerCase()) !== -1 &&
+        (genre ? game.genre === genre : true)) ||
+      genre === "Gênero"
+        ? game.title.toLowerCase().indexOf(searchValue.toLowerCase()) !== -1
+        : false
     );
     setGameList(newGames);
     setLoading(false);
@@ -97,8 +115,6 @@ const Home = () => {
         "O servidor não conseguirá responder por agora, tente voltar novamente mais tarde."
       );
 
-      console.log(err)
-      
       if (err.code === "ECONNABORTED") {
         setErrorMessage("O servidor demorou para responder, tente mais tarde.");
       }
@@ -119,7 +135,7 @@ const Home = () => {
     <Container>
       <header>
         <div className="banner">
-          <img src={banner} alt="banner" />
+          <img src={banner} alt="banner" className="banner-image" />
         </div>
         <Filter>
           <div className="search-bar">
