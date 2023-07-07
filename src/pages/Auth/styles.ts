@@ -55,6 +55,13 @@ export const FormColumn = styled.div`
     }
   }
 
+  .info-icon {
+    background-color: #45456c;
+    border: none;
+    color: #d1d1d1;
+    height: 2.25rem;
+  }
+
   .footer-form {
     display: flex;
     justify-content: space-between;

@@ -11,7 +11,6 @@ import banner from "../../assets/banner.png";
 import errorBanner from "../../assets/error.svg";
 import api from "../../services/api";
 import { Container, Content, List, Filter, Error } from "./styles";
-
 interface IGame {
   id: number;
   title: string;
@@ -58,7 +57,9 @@ const Home = () => {
     loadList();
   }, []);
 
-  function handleGenresChange(event: React.ChangeEvent<HTMLSelectElement>): void {
+  function handleGenresChange(
+    event: React.ChangeEvent<HTMLSelectElement>
+  ): void {
     setGameList(backupList);
     const genre = event.target.value;
 
@@ -120,7 +121,9 @@ const Home = () => {
       }
 
       if (err.response) {
-        const errors: Set<number> = new Set([500, 502, 503, 504, 507, 508, 509]);
+        const errors: Set<number> = new Set([
+          500, 502, 503, 504, 507, 508, 509,
+        ]);
         const status: number = err.response.status;
 
         if (errors.has(status)) {
