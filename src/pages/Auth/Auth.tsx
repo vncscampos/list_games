@@ -6,7 +6,6 @@ import { useForm } from "react-hook-form";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  AuthError,
 } from "firebase/auth";
 import { FaInfo } from "react-icons/fa";
 
@@ -26,7 +25,7 @@ const Auth = () => {
   const {
     register,
     handleSubmit,
-    formState: { errors, isValid, isDirty },
+    formState: { isValid, isDirty },
   } = useForm<FormData>();
 
   const tooltip = (
