@@ -58,7 +58,7 @@ const Home = () => {
     loadList();
   }, []);
 
-  function handleGenresChange(event: React.ChangeEvent<HTMLSelectElement>) {
+  function handleGenresChange(event: React.ChangeEvent<HTMLSelectElement>): void {
     setGameList(backupList);
     const genre = event.target.value;
 
@@ -82,7 +82,7 @@ const Home = () => {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function handleSearch(event: any) {
+  function handleSearch(event: any): void {
     const query = event.target.value;
     setSearchValue(query);
     setLoading(true);
@@ -97,7 +97,7 @@ const Home = () => {
     setLoading(false);
   }
 
-  async function loadList() {
+  async function loadList(): Promise<void> {
     try {
       const res = await api.get("/data", {
         timeout: 5000,
@@ -120,7 +120,10 @@ const Home = () => {
       }
 
       if (err.response) {
-        if (err.response.status >= 500) {
+        const errors: Set<number> = new Set([500, 502, 503, 504, 507, 508, 509]);
+        const status: number = err.response.status;
+
+        if (errors.has(status)) {
           setErrorMessage(
             "O servidor falhou em responder, tente recarregar a página."
           );

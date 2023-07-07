@@ -15,7 +15,7 @@ export const Filter = styled.div`
   grid-template-columns: 8fr 4fr;
   justify-items: center;
   gap: 1rem;
-  
+
   .search-bar {
     width: 100%;
     .search-icon {
@@ -30,10 +30,16 @@ export const Filter = styled.div`
       border: none;
       color: #d1d1d1;
       font-weight: 700;
-    }
 
-    .search-input::placeholder {
-      color: #d1d1d1;
+      &::placeholder {
+        color: #d1d1d1;
+      }
+
+      &:focus {
+        border-color: #5d347b;
+        box-shadow: inset 0 1px 1px rgba(93, 52, 123, 0.5),
+          0 0 12px rgba(137, 37, 177, 1);
+      }
     }
 
     .search-bar {
@@ -50,6 +56,12 @@ export const Filter = styled.div`
     color: #d1d1d1;
     font-weight: 700;
     height: 2.25rem;
+
+    &:focus {
+      border-color: #8925B1;
+      box-shadow: inset 0 1px 1px rgba(93, 52, 123, 0.5),
+        0 0 12px rgba(137, 37, 177, 1);
+    }
   }
 `;
 
