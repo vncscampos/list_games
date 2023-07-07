@@ -12,12 +12,28 @@ export const FormColumn = styled.div`
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  color: #4b4b4b !important;
 
   .box {
     background: white;
     padding: 5rem 1rem;
     width: 80%;
     border-radius: 8px;
+
+
+    .header {
+      h1 {
+        font-weight: 700;
+      }
+
+      margin-bottom: 2rem;
+    }
+  }
+
+  .error-message {
+    color: #B1252D;
+    font-weight: 400;
+    text-align: center !important;
   }
 
   .input-form {
@@ -25,7 +41,7 @@ export const FormColumn = styled.div`
     border-radius: 4px;
     border: none;
     color: #d1d1d1;
-    font-weight: 400;
+    font-weight: 500;
     margin-bottom: 1rem;
 
     &::placeholder {
@@ -43,8 +59,10 @@ export const FormColumn = styled.div`
     display: flex;
     justify-content: space-between;
 
-    .text-muted {
+    .text {
+      color: #8925B1;
       cursor: pointer;
+      font-weight: 700;
     }
 
     .submit-button {
