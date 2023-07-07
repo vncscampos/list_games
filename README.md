@@ -1,5 +1,5 @@
-![img1](https://github.com/vncscampos/list_games/blob/master/.github/img1.png)
+![img1](https://raw.githubusercontent.com/vncscampos/list_games/main/.github/img1.png)
 
-![img2](https://github.com/vncscampos/list_games/blob/master/.github/img2.png)
+![img2](https://raw.githubusercontent.com/vncscampos/list_games/main/.github/img2.png)
 
-![img3](https://github.com/vncscampos/list_games/blob/master/.github/img3.jpeg)
+<img src="https://raw.githubusercontent.com/vncscampos/list_games/main/.github/img3.jpeg" width="400" />
