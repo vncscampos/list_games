@@ -6,11 +6,15 @@ import { FaSearch } from "react-icons/fa";
 import Card from "react-bootstrap/Card";
 import Spinner from "react-bootstrap/Spinner";
 import Image from "react-bootstrap/Image";
+import Heart from "react-animated-heart";
 
 import banner from "../../assets/banner.png";
 import errorBanner from "../../assets/error.svg";
 import api from "../../services/api";
+import apiJSON from "../../services/api.json";
 import { Container, Content, List, Filter, Error } from "./styles";
+import { OverlayTrigger, Tooltip } from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
 interface IGame {
   id: number;
   title: string;
@@ -26,14 +30,17 @@ interface IGame {
 }
 
 const Home = () => {
-  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
-  const [games, setGameList] = useState<IGame[]>([]);
+  const [games, setGameList] = useState<IGame[]>(apiJSON);
   const [backupList, setBackupList] = useState<IGame[]>([]);
   const [errorMessage, setErrorMessage] = useState("");
 
   const [searchValue, setSearchValue] = useState("");
   const [genre, setGenre] = useState("");
+
+  const [isClick, setClick] = useState(false);
 
   const genresArray = [
     "Shooter",
@@ -54,7 +61,7 @@ const Home = () => {
   ];
 
   useEffect(() => {
-    loadList();
+    // loadList();
   }, []);
 
   function handleGenresChange(
@@ -137,6 +144,16 @@ const Home = () => {
     setLoading(false);
   }
 
+  function validateUser(): void {
+    const token = localStorage.getItem("accessKey");
+    if (token) {
+      setClick(!isClick);
+    } else {
+      alert("Você deve logar antes.");
+      navigate("/auth");
+    }
+  }
+
   return (
     <Container>
       <header>
@@ -200,15 +217,27 @@ const Home = () => {
                     className="card-image"
                   />
                   <Card.Body>
+                    <div className="heart-icon">
+                      <Heart
+                        isClick={isClick}
+                        onClick={validateUser}
+                      />
+                    </div>
                     <Card.Title className="card-title">{game.title}</Card.Title>
-                    <Card.Text>{game.short_description}</Card.Text>
-                    <Card.Text>
-                      <b>Gênero:</b> {game.genre}
-                    </Card.Text>
-                    <Card.Text>
-                      <b>Plataforma:</b> {game.platform}
-                    </Card.Text>
-                    <div className="cover">
+                    <OverlayTrigger
+                      placement="bottom"
+                      overlay={
+                        <Tooltip id="tooltip">
+                          <strong>{game.short_description}</strong>
+                        </Tooltip>
+                      }
+                    >
+                      <Card.Text className="card-description">
+                        {game.short_description}
+                      </Card.Text>
+                    </OverlayTrigger>
+                    <Card.Text className="genre">{game.genre}</Card.Text>
+                    {/* <div className="cover">
                       <Card.Text>
                         <b>Desenvolvedores:</b> {game.developer}
                       </Card.Text>
@@ -216,11 +245,30 @@ const Home = () => {
                         <b>Estúdio:</b> {game.publisher}
                       </Card.Text>
                       <Card.Text>
+                        <b>Plataforma:</b> {game.platform}
+                      </Card.Text>
+                      <Card.Text>
                         <b>Lançamento: </b>
                         {game.release_date}
                       </Card.Text>
-                    </div>
+                    </div> */}
                   </Card.Body>
+                  <Card.Footer className="card-footer">
+                    {/* <button type="button" className="see-more-button">
+                      Ver mais
+                    </button> */}
+                    <nav>
+                      <ul>
+                        <li>
+                          Ver mais
+                          <span></span>
+                          <span></span>
+                          <span></span>
+                          <span></span>
+                        </li>
+                      </ul>
+                    </nav>
+                  </Card.Footer>
                 </Card>
               );
             })}
