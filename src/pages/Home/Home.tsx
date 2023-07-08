@@ -11,10 +11,12 @@ import Heart from "react-animated-heart";
 import banner from "../../assets/banner.png";
 import errorBanner from "../../assets/error.svg";
 import api from "../../services/api";
-import apiJSON from "../../services/api.json";
+import apiJson from "../../services/api.json";
+import { addDoc, collection, getDocs, getFirestore } from "firebase/firestore";
 import { Container, Content, List, Filter, Error } from "./styles";
 import { OverlayTrigger, Tooltip } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
+import { db } from "../../services/firebase";
 interface IGame {
   id: number;
   title: string;
@@ -29,19 +31,25 @@ interface IGame {
   freetogame_profile_url: string;
 }
 
+interface IFavorite {
+  id: string;
+  user_id: string;
+  game_id: number;
+}
+
 const Home = () => {
   const navigate = useNavigate();
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
-  const [games, setGameList] = useState<IGame[]>(apiJSON);
-  const [backupList, setBackupList] = useState<IGame[]>([]);
   const [errorMessage, setErrorMessage] = useState("");
-
   const [searchValue, setSearchValue] = useState("");
+
+  const [games, setGameList] = useState<IGame[]>([]);
+  const [backupList, setBackupList] = useState<IGame[]>([]);
+  const [favorites, setFavoriteList] = useState<IFavorite[]>([]);
+
   const [genre, setGenre] = useState("");
-
-  const [isClick, setClick] = useState(false);
-
   const genresArray = [
     "Shooter",
     "MMOARPG",
@@ -61,7 +69,9 @@ const Home = () => {
   ];
 
   useEffect(() => {
-    // loadList();
+    loadFavoriteList();
+    loadList();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function handleGenresChange(
@@ -105,16 +115,26 @@ const Home = () => {
     setLoading(false);
   }
 
+  async function loadFavoriteList(): Promise<void> {
+    try {
+      const { docs } = await getDocs(collection(db, "favorite"));
+      const data = docs.map((doc) => ({ ...doc.data(), id: doc.id }));
+      setFavoriteList(data as IFavorite[]);
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
   async function loadList(): Promise<void> {
     try {
-      const res = await api.get("/data", {
+      const { data } = await api.get("/data", {
         timeout: 5000,
         headers: {
           "dev-email-address": "dev@email.com",
         },
       });
-      setGameList(res.data);
-      setBackupList(res.data);
+      setGameList(data);
+      setBackupList(data);
     } catch (error) {
       const err = error as AxiosError;
 
@@ -144,13 +164,23 @@ const Home = () => {
     setLoading(false);
   }
 
-  function validateUser(): void {
-    const token = localStorage.getItem("accessKey");
-    if (token) {
-      setClick(!isClick);
+  function validateUser(game: IGame, isClicked: boolean): void {
+    let user = localStorage.getItem("user");
+    if (user) {
+      user = JSON.parse(user);
+      addFavorite(game.id, user.id);
     } else {
       alert("Você deve logar antes.");
       navigate("/auth");
+    }
+  }
+
+  async function addFavorite(game_id: number, user_id: string) {
+    try {
+      await addDoc(collection(db, "favorite"), { game_id, user_id });
+      loadFavoriteList();
+    } catch (err) {
+      console.error(err);
     }
   }
 
@@ -219,8 +249,15 @@ const Home = () => {
                   <Card.Body>
                     <div className="heart-icon">
                       <Heart
-                        isClick={isClick}
-                        onClick={validateUser}
+                        isClick={favorites.some(
+                          (fav) => fav.game_id === game.id
+                        )}
+                        onClick={() =>
+                          validateUser(
+                            game,
+                            favorites.some((fav) => fav.game_id === game.id)
+                          )
+                        }
                       />
                     </div>
                     <Card.Title className="card-title">{game.title}</Card.Title>
@@ -237,26 +274,8 @@ const Home = () => {
                       </Card.Text>
                     </OverlayTrigger>
                     <Card.Text className="genre">{game.genre}</Card.Text>
-                    {/* <div className="cover">
-                      <Card.Text>
-                        <b>Desenvolvedores:</b> {game.developer}
-                      </Card.Text>
-                      <Card.Text>
-                        <b>Estúdio:</b> {game.publisher}
-                      </Card.Text>
-                      <Card.Text>
-                        <b>Plataforma:</b> {game.platform}
-                      </Card.Text>
-                      <Card.Text>
-                        <b>Lançamento: </b>
-                        {game.release_date}
-                      </Card.Text>
-                    </div> */}
                   </Card.Body>
                   <Card.Footer className="card-footer">
-                    {/* <button type="button" className="see-more-button">
-                      Ver mais
-                    </button> */}
                     <nav>
                       <ul>
                         <li>

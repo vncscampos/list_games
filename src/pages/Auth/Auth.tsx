@@ -60,7 +60,8 @@ const Auth = () => {
     try {
       const { user } = await signInWithEmailAndPassword(auth, email, password);
       const token = await user.getIdToken();
-      localStorage.setItem("accessKey", token);
+      const jsonUser = JSON.stringify({ token: token, id: user.uid });
+      localStorage.setItem("user", jsonUser);
       setMessageError("");
       navigate("/");
     } catch (err) {

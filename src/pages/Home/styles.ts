@@ -141,13 +141,14 @@ export const List = styled.div`
     overflow: hidden;
 
     .card-title {
-      font-weight: 700;
+      font-weight: bold;
+      max-width: 220px;
     }
 
     .heart-icon {
       right: 0;
       top: 0;
-      margin-top: 7.5rem;
+      margin-top: 50%;
       position: absolute;
     }
 
@@ -175,7 +176,6 @@ export const List = styled.div`
       height: 100%;
       background-color: rgba(137, 37, 177, 0.75);
       transition: opacity 0.15s ease-in;
-      opacity: 0;
       padding-top: 80px;
       color: #fff;
       text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.15);
@@ -192,6 +192,7 @@ export const List = styled.div`
         list-style-type: none;
         margin: 0;
         padding: 0;
+        cursor: pointer;
       }
 
       nav ul li {
