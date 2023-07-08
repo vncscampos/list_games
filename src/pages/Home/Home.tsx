@@ -11,8 +11,7 @@ import Heart from "react-animated-heart";
 import banner from "../../assets/banner.png";
 import errorBanner from "../../assets/error.svg";
 import api from "../../services/api";
-import apiJson from "../../services/api.json";
-import { addDoc, collection, getDocs, getFirestore } from "firebase/firestore";
+import { addDoc, collection, getDocs } from "firebase/firestore";
 import { Container, Content, List, Filter, Error } from "./styles";
 import { OverlayTrigger, Tooltip } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
@@ -164,11 +163,11 @@ const Home = () => {
     setLoading(false);
   }
 
-  function validateUser(game: IGame, isClicked: boolean): void {
+  function validateUser(game_id: number): void {
     let user = localStorage.getItem("user");
     if (user) {
       user = JSON.parse(user);
-      addFavorite(game.id, user.id);
+      addFavorite(game_id, user.id);
     } else {
       alert("Você deve logar antes.");
       navigate("/auth");
@@ -254,8 +253,7 @@ const Home = () => {
                         )}
                         onClick={() =>
                           validateUser(
-                            game,
-                            favorites.some((fav) => fav.game_id === game.id)
+                            game.id,
                           )
                         }
                       />
