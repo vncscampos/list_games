@@ -36,6 +36,11 @@ interface IFavorite {
   game_id: number;
 }
 
+interface User {
+  id: string;
+  token: string;
+}
+
 const Home = () => {
   const navigate = useNavigate();
 
@@ -164,10 +169,10 @@ const Home = () => {
   }
 
   function validateUser(game_id: number): void {
-    let user = localStorage.getItem("user");
+    const user = localStorage.getItem("user");
     if (user) {
-      user = JSON.parse(user);
-      addFavorite(game_id, user.id);
+      const parsedUser: User = JSON.parse(user);
+      addFavorite(game_id, parsedUser?.id);
     } else {
       alert("Você deve logar antes.");
       navigate("/auth");
