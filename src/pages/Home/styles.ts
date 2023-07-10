@@ -6,6 +6,18 @@ export const Container = styled.div`
     min-height: 5rem;
     max-height: 450px;
   }
+
+  .navbar {
+    background: #45456c !important;
+    padding: .5rem 5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, .3);
+
+    .link {
+      color: #d1d1d1 !important;
+      font-weight: 700;
+      font-size: 12pt !important;
+    }
+  }
 `;
 
 export const Filter = styled.div`

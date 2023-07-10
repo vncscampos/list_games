@@ -7,15 +7,25 @@ import Card from "react-bootstrap/Card";
 import Spinner from "react-bootstrap/Spinner";
 import Image from "react-bootstrap/Image";
 import Heart from "react-animated-heart";
+import Navbar from "react-bootstrap/Navbar";
 
 import banner from "../../assets/banner.png";
 import errorBanner from "../../assets/error.svg";
 import api from "../../services/api";
-import { addDoc, collection, getDocs } from "firebase/firestore";
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  getDocs,
+  query,
+  where,
+} from "firebase/firestore";
 import { Container, Content, List, Filter, Error } from "./styles";
-import { OverlayTrigger, Tooltip } from "react-bootstrap";
+import { Nav, OverlayTrigger, Tooltip } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
-import { db } from "../../services/firebase";
+import { db, auth } from "../../services/firebase";
+import { signOut } from "firebase/auth";
 interface IGame {
   id: number;
   title: string;
@@ -31,7 +41,7 @@ interface IGame {
 }
 
 interface IFavorite {
-  id: string;
+  id?: string;
   user_id: string;
   game_id: number;
 }
@@ -43,7 +53,7 @@ interface User {
 
 const Home = () => {
   const navigate = useNavigate();
-
+  const [user, setUser] = useState<User>();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -73,10 +83,22 @@ const Home = () => {
   ];
 
   useEffect(() => {
-    loadFavoriteList();
+    loadUser();
     loadList();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (user) loadFavoriteList();
+  }, [user]);
+
+  async function loadUser() {
+    const localUser = localStorage.getItem("user");
+    if (localUser) {
+      const parsedUser: User = JSON.parse(localUser);
+      setUser(parsedUser);
+    }
+  }
 
   function handleGenresChange(
     event: React.ChangeEvent<HTMLSelectElement>
@@ -121,15 +143,20 @@ const Home = () => {
 
   async function loadFavoriteList(): Promise<void> {
     try {
-      const { docs } = await getDocs(collection(db, "favorite"));
+      const q = query(
+        collection(db, "favorite"),
+        where("user_id", "==", user?.id)
+      );
+      const { docs } = await getDocs(q);
       const data = docs.map((doc) => ({ ...doc.data(), id: doc.id }));
       setFavoriteList(data as IFavorite[]);
     } catch (err) {
-      console.log(err);
+      console.error(err);
     }
   }
 
   async function loadList(): Promise<void> {
+    setLoading(true);
     try {
       const { data } = await api.get("/data", {
         timeout: 5000,
@@ -169,10 +196,8 @@ const Home = () => {
   }
 
   function validateUser(game_id: number): void {
-    const user = localStorage.getItem("user");
     if (user) {
-      const parsedUser: User = JSON.parse(user);
-      addFavorite(game_id, parsedUser?.id);
+      addFavorite(game_id, user.id);
     } else {
       alert("Você deve logar antes.");
       navigate("/auth");
@@ -181,8 +206,51 @@ const Home = () => {
 
   async function addFavorite(game_id: number, user_id: string) {
     try {
-      await addDoc(collection(db, "favorite"), { game_id, user_id });
-      loadFavoriteList();
+      const documentExists = checkExistingDocument(game_id, user_id);
+      if (documentExists) {
+        removeFavorite(game_id);
+      } else {
+        const { id } = await addDoc(collection(db, "favorite"), {
+          game_id,
+          user_id,
+        });
+        updateFavoriteList(id, game_id, user_id);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async function removeFavorite(game_id: number) {
+    try {
+      const fav = favorites.find((f) => f.game_id === game_id);
+      const updatedList = favorites.filter((f) => f.id !== fav?.id);
+      setFavoriteList(updatedList);
+      await deleteDoc(doc(db, "favorite", fav?.id || ""));
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  function updateFavoriteList(
+    id: string,
+    game_id: number,
+    user_id: string
+  ): void {
+    setFavoriteList([...favorites, { id, game_id, user_id }]);
+  }
+
+  function checkExistingDocument(gameId: number, userId: string): boolean {
+    return !!favorites.find(
+      (f) => f.game_id === gameId && f.user_id === userId
+    );
+  }
+
+  async function logout(): Promise<void> {
+    try {
+      setUser(undefined);
+      localStorage.clear();
+      await signOut(auth);
     } catch (err) {
       console.error(err);
     }
@@ -191,6 +259,19 @@ const Home = () => {
   return (
     <Container>
       <header>
+        <Navbar expand="lg" className="bg-body-tertiary navbar" fixed="top">
+          <Nav className="me-auto">
+            {!user ? (
+              <Nav.Link className="link" href="/auth">
+                Login
+              </Nav.Link>
+            ) : (
+              <Nav.Link className="link" href="/" onClick={logout}>
+                Sair
+              </Nav.Link>
+            )}
+          </Nav>
+        </Navbar>
         <div className="banner">
           <img src={banner} alt="banner" className="banner-image" />
         </div>
@@ -256,11 +337,7 @@ const Home = () => {
                         isClick={favorites.some(
                           (fav) => fav.game_id === game.id
                         )}
-                        onClick={() =>
-                          validateUser(
-                            game.id,
-                          )
-                        }
+                        onClick={() => validateUser(game.id)}
                       />
                     </div>
                     <Card.Title className="card-title">{game.title}</Card.Title>
