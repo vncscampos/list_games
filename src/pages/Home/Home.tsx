@@ -2,16 +2,13 @@ import { AxiosError } from "axios";
 import React, { useState, useEffect } from "react";
 import Form from "react-bootstrap/Form";
 import InputGroup from "react-bootstrap/InputGroup";
-import { FaSearch } from "react-icons/fa";
+import { FaSearch, FaHeart } from "react-icons/fa";
 import Card from "react-bootstrap/Card";
 import Spinner from "react-bootstrap/Spinner";
 import Image from "react-bootstrap/Image";
 import Heart from "react-animated-heart";
 import Navbar from "react-bootstrap/Navbar";
-
-import banner from "../../assets/banner.png";
-import errorBanner from "../../assets/error.svg";
-import api from "../../services/api";
+import Button from "react-bootstrap/Button";
 import {
   addDoc,
   collection,
@@ -21,9 +18,12 @@ import {
   query,
   where,
 } from "firebase/firestore";
-import { Container, Content, List, Filter, Error } from "./styles";
 import { Nav, OverlayTrigger, Tooltip } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
+
+import { Container, Content, List, Filter, Error } from "./styles";
+import errorBanner from "../../assets/error.svg";
+import api from "../../services/api";
 import { db, auth } from "../../services/firebase";
 import { signOut } from "firebase/auth";
 interface IGame {
@@ -57,12 +57,13 @@ const Home = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [searchValue, setSearchValue] = useState("");
 
   const [games, setGameList] = useState<IGame[]>([]);
   const [backupList, setBackupList] = useState<IGame[]>([]);
   const [favorites, setFavoriteList] = useState<IFavorite[]>([]);
 
+  const [showFavorite, setShowFavorite] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
   const [genre, setGenre] = useState("");
   const genresArray = [
     "Shooter",
@@ -81,6 +82,7 @@ const Home = () => {
     "Social",
     "Fantasy",
   ];
+  const ratingArray = ["Bem avaliados", "Mal avaliados"];
 
   useEffect(() => {
     loadUser();
@@ -100,45 +102,35 @@ const Home = () => {
     }
   }
 
-  function handleGenresChange(
-    event: React.ChangeEvent<HTMLSelectElement>
-  ): void {
-    setGameList(backupList);
-    const genre = event.target.value;
+  function handleFilter(event?: any): void {
+    const typeFilter = event?.target.id;
+    const value = event?.target.value;
 
-    if (genre === "Gênero") {
-      setGenre("");
-    }
+    if (typeFilter === "search") setSearchValue(value);
+    if (typeFilter === "genre") setGenre(value);
+    if (!typeFilter) setShowFavorite(!showFavorite);
 
-    setLoading(true);
-    const newGames = backupList.filter((game) =>
-      (game.genre === genre &&
+    console.group("Inputs");
+    console.log("value", value);
+    console.log("typeFilter", typeFilter);
+    console.log("genre", genre, "search", searchValue);
+    console.log("showFavorite", showFavorite);
+    console.groupEnd();
+
+    const newGameList = backupList.filter(
+      (game) =>
+        (showFavorite
+          ? favorites.find((fav) => fav.game_id === game.id)
+          : true) &&
         (searchValue
           ? game.title.toLowerCase().indexOf(searchValue.toLowerCase()) !== -1
-          : true)) ||
-      genre === "Gênero"
-        ? game.title.toLowerCase().indexOf(searchValue.toLowerCase()) !== -1
-        : false
+          : true) &&
+        (genre ? game.genre === genre : true)
     );
-    setGameList(newGames);
-    setGenre(genre);
-    setLoading(false);
-  }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function handleSearch(event: any): void {
-    const query = event.target.value;
-    setSearchValue(query);
-    setLoading(true);
-    const newGames = backupList.filter((game) =>
-      (game.title.toLowerCase().indexOf(query.toLowerCase()) !== -1 &&
-        (genre ? game.genre === genre : true)) ||
-      genre === "Gênero"
-        ? game.title.toLowerCase().indexOf(searchValue.toLowerCase()) !== -1
-        : false
-    );
-    setGameList(newGames);
-    setLoading(false);
+    console.log("newGameList", newGameList);
+
+    setGameList(newGameList);
   }
 
   async function loadFavoriteList(): Promise<void> {
@@ -164,6 +156,7 @@ const Home = () => {
           "dev-email-address": "dev@email.com",
         },
       });
+      setError(false);
       setGameList(data);
       setBackupList(data);
     } catch (error) {
@@ -196,12 +189,12 @@ const Home = () => {
   }
 
   function validateUser(game_id: number): void {
-    if (user) {
-      addFavorite(game_id, user.id);
-    } else {
+    if (!user) {
       alert("Você deve logar antes.");
       navigate("/auth");
+      return;
     }
+    addFavorite(game_id, user.id);
   }
 
   async function addFavorite(game_id: number, user_id: string) {
@@ -214,7 +207,7 @@ const Home = () => {
           game_id,
           user_id,
         });
-        updateFavoriteList(id, game_id, user_id);
+        setFavoriteList([...favorites, { id, game_id, user_id }]);
       }
     } catch (err) {
       console.error(err);
@@ -230,14 +223,6 @@ const Home = () => {
     } catch (err) {
       console.error(err);
     }
-  }
-
-  function updateFavoriteList(
-    id: string,
-    game_id: number,
-    user_id: string
-  ): void {
-    setFavoriteList([...favorites, { id, game_id, user_id }]);
   }
 
   function checkExistingDocument(gameId: number, userId: string): boolean {
@@ -273,38 +258,70 @@ const Home = () => {
           </Nav>
         </Navbar>
         <div className="banner">
-          <img src={banner} alt="banner" className="banner-image" />
+          {/* <img src={banner} alt="banner" className="banner-image" /> */}
+          <Filter>
+            <div className="search-bar">
+              <InputGroup className="mb-3 search-input">
+                <InputGroup.Text className="search-icon">
+                  <FaSearch />
+                </InputGroup.Text>
+                <Form.Control
+                  className="search-input"
+                  placeholder="Pesquise pelo nome do jogo"
+                  aria-label="Pesquise pelo nome do jogo"
+                  aria-describedby="basic-addon2"
+                  onChange={handleFilter}
+                  id="search"
+                />
+              </InputGroup>
+            </div>
+            <div className="filters">
+              <div className="selects">
+                <Form.Select
+                  aria-label="select-genre"
+                  className="select-genres"
+                  onChange={handleFilter}
+                  id="genre"
+                >
+                  <option>Gênero</option>
+                  {genresArray.map((g) => {
+                    return (
+                      <option key={g} value={g}>
+                        {g}
+                      </option>
+                    );
+                  })}
+                </Form.Select>
+                <Form.Select
+                  aria-label="select-rating"
+                  className="select-genres"
+                  onChange={handleFilter}
+                >
+                  <option>Avaliação</option>
+                  {ratingArray.map((r) => {
+                    return (
+                      <option key={r} value={r}>
+                        {r}
+                      </option>
+                    );
+                  })}
+                </Form.Select>
+              </div>
+              <Button
+                className="favorite-button"
+                variant="dark"
+                style={{
+                  backgroundColor: showFavorite ? "Violet" : "transparent",
+                  color: showFavorite ? "white" : "Violet",
+                }}
+                onClick={handleFilter}
+              >
+                <FaHeart />
+                Favoritos
+              </Button>
+            </div>
+          </Filter>
         </div>
-        <Filter>
-          <div className="search-bar">
-            <InputGroup className="mb-3 search-input">
-              <InputGroup.Text className="search-icon">
-                <FaSearch />
-              </InputGroup.Text>
-              <Form.Control
-                className="search-input"
-                placeholder="Pesquise pelo nome do jogo"
-                aria-label="Pesquise pelo nome do jogo"
-                aria-describedby="basic-addon2"
-                onChange={handleSearch}
-              />
-            </InputGroup>
-          </div>
-          <Form.Select
-            aria-label="select-genre"
-            className="select-genres"
-            onChange={handleGenresChange}
-          >
-            <option>Gênero</option>
-            {genresArray.map((g) => {
-              return (
-                <option key={g} value={g}>
-                  {g}
-                </option>
-              );
-            })}
-          </Form.Select>
-        </Filter>
       </header>
       <Content>
         {loading ? (
@@ -313,7 +330,12 @@ const Home = () => {
           </Error>
         ) : error ? (
           <Error>
-            <h1>{errorMessage}</h1>
+            <h1>
+              {errorMessage}{" "}
+              <span className="refresh" onClick={() => loadList()}>
+                Tentar de novo
+              </span>
+            </h1>
             <Image
               className="image-error"
               src={errorBanner}

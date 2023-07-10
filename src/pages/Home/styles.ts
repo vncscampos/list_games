@@ -1,16 +1,24 @@
 import styled from "styled-components";
+import banner from "../../assets/banner.png";
 
 export const Container = styled.div`
-  .banner-image {
+  .banner {
+    background-image: url(${banner});
+    background-size: cover;
+    background-position: center;
     width: 100%;
+    height: 400px;
     min-height: 5rem;
-    max-height: 450px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
   }
 
   .navbar {
     background: #45456c !important;
-    padding: .5rem 5rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, .3);
+    padding: 0.5rem 5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 
     .link {
       color: #d1d1d1 !important;
@@ -21,12 +29,21 @@ export const Container = styled.div`
 `;
 
 export const Filter = styled.div`
-  margin: -20px 10% 0 10%;
+  background: #1f2334;
+  padding: 1rem;
+  min-width: 50%;
+  border-radius: 8px;
 
-  display: grid;
-  grid-template-columns: 8fr 4fr;
-  justify-items: center;
-  gap: 1rem;
+  .filters {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .selects {
+    display: flex;
+  }
 
   .search-bar {
     width: 100%;
@@ -61,19 +78,30 @@ export const Filter = styled.div`
   }
 
   .select-genres {
-    width: 100%;
     background: #45456c;
     border-radius: 4px;
     border: none;
     color: #d1d1d1;
     font-weight: 700;
     height: 2.25rem;
+    margin-right: 1rem;
 
     &:focus {
       border-color: #8925b1;
       box-shadow: inset 0 1px 1px rgba(93, 52, 123, 0.5),
         0 0 12px rgba(137, 37, 177, 1);
     }
+  }
+
+  .favorite-button {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    font-weight: 700;
+    --c: Violet;
+    color: var(--c);
+    border: 0.1em solid var(--c);
+    border-radius: 0.5em;
   }
 `;
 
@@ -208,7 +236,7 @@ export const List = styled.div`
       }
 
       nav ul li {
-        --c:  Violet;
+        --c: Violet;
         color: var(--c);
         font-size: 16px;
         border: 0.3em solid var(--c);
@@ -287,5 +315,10 @@ export const Error = styled.div`
     width: 100%;
     min-height: 5rem;
     max-width: 600px;
+  }
+
+  .refresh {
+    color: Violet;
+    cursor: pointer;
   }
 `;

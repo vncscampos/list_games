@@ -8,10 +8,10 @@ import {
   signInWithEmailAndPassword,
 } from "firebase/auth";
 import { FaInfo } from "react-icons/fa";
+import { InputGroup, OverlayTrigger, Tooltip } from "react-bootstrap";
 
 import { Container, BannerColumn, FormColumn } from "./styles";
 import { auth } from "../../services/firebase";
-import { InputGroup, OverlayTrigger, Tooltip } from "react-bootstrap";
 
 type FormData = {
   email: string;
