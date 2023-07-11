@@ -1,9 +1,9 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { AxiosError } from "axios";
-import { useState, useEffect, SetStateAction } from "react";
+import { useState, useEffect } from "react";
 import Form from "react-bootstrap/Form";
 import InputGroup from "react-bootstrap/InputGroup";
-import { FaSearch, FaHeart } from "react-icons/fa";
+import { FaSearch, FaHeart, FaTrashAlt } from "react-icons/fa";
 import { FiLogIn, FiLogOut } from "react-icons/fi";
 import Card from "react-bootstrap/Card";
 import Spinner from "react-bootstrap/Spinner";
@@ -105,13 +105,23 @@ const Home = () => {
     const typeFilter = event?.target.id;
     const value = event?.target.value;
 
+    console.log("value");
+
     if (typeFilter === "search") setSearchValue(value);
     if (typeFilter === "genre") setGenre(value);
     if (typeFilter === "rate") setOrderRate(value);
     if (!typeFilter) setShowFavorite(!showFavorite);
   }
 
+  function clearFilter(): void {
+    setGenre("Gênero");
+    setSearchValue("");
+    setOrderRate("Avaliação");
+    setShowFavorite(false);
+  }
+
   useEffect(() => {
+    console.log(genre, orderRate, searchValue);
     const newGameList = backupList.filter(
       (game) =>
         (showFavorite
@@ -124,9 +134,10 @@ const Home = () => {
     );
 
     let sortedList: GameWithRate[] = [];
-    if(orderRate == 'Mal avaliados') sortedList = sortList(newGameList, 'asc');
-    if(orderRate === 'Bem avaliados') sortedList = sortList(newGameList, 'desc');
-    if(orderRate === 'Avaliação') sortedList = newGameList;
+    if (orderRate == "Mal avaliados") sortedList = sortList(newGameList, "asc");
+    if (orderRate === "Bem avaliados")
+      sortedList = sortList(newGameList, "desc");
+    if (orderRate === "Avaliação") sortedList = newGameList;
 
     setGamesWithRate(sortedList);
   }, [genre, searchValue, showFavorite, orderRate]);
@@ -284,18 +295,20 @@ const Home = () => {
                   className="search-input"
                   placeholder="Pesquise pelo nome do jogo"
                   aria-label="Pesquise pelo nome do jogo"
-                  aria-describedby="basic-addon2"
                   onChange={handleFilter}
                   id="search"
+                  value={searchValue}
                 />
               </InputGroup>
             </div>
+
             <div className="filters">
               <div className="selects">
                 <Form.Select
                   aria-label="select-genre"
                   className="select-genres"
                   onChange={handleFilter}
+                  defaultValue={genre}
                   id="genre"
                 >
                   <option>Gênero</option>
@@ -312,6 +325,7 @@ const Home = () => {
                   className="select-genres"
                   onChange={handleFilter}
                   id="rate"
+                  defaultValue="Avaliação"
                 >
                   <option>Avaliação</option>
                   {ratingArray.map((r) => {
@@ -322,19 +336,24 @@ const Home = () => {
                     );
                   })}
                 </Form.Select>
+                <Button
+                  className="favorite-button"
+                  variant="dark"
+                  style={{
+                    backgroundColor: showFavorite ? "Violet" : "transparent",
+                    color: showFavorite ? "white" : "Violet",
+                  }}
+                  onClick={handleFilter}
+                >
+                  <FaHeart />
+                  Favoritos
+                </Button>
               </div>
-              <Button
-                className="favorite-button"
-                variant="dark"
-                style={{
-                  backgroundColor: showFavorite ? "Violet" : "transparent",
-                  color: showFavorite ? "white" : "Violet",
-                }}
-                onClick={handleFilter}
-              >
-                <FaHeart />
-                Favoritos
-              </Button>
+
+              <div className="clear-filter" onClick={clearFilter}>
+                <FaTrashAlt />
+                <span>Limpar filtros</span>
+              </div>
             </div>
           </Filter>
         </div>

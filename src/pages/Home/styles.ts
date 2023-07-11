@@ -37,7 +37,7 @@ export const Container = styled.div`
 export const Filter = styled.div`
   background: #1f2334;
   padding: 1rem;
-  min-width: 50%;
+  min-width: 70%;
   border-radius: 8px;
 
   .filters {
@@ -49,6 +49,18 @@ export const Filter = styled.div`
 
   .selects {
     display: flex;
+  }
+
+  .clear-filter {
+    display: flex;
+    align-items: center;
+    color: #d1d1d1;
+    font-weight: 700;
+    cursor: pointer;
+
+    svg {
+      margin-right: 0.5rem;
+    }
   }
 
   .search-bar {
@@ -72,8 +84,8 @@ export const Filter = styled.div`
 
       &:focus {
         border-color: #5d347b;
-        box-shadow: inset 0 1px 1px rgba(238,130,238, 0.5),
-          0 0 12px rgba(238,130,238, 1);
+        box-shadow: inset 0 1px 1px rgba(238, 130, 238, 0.5),
+          0 0 12px rgba(238, 130, 238, 1);
       }
     }
 
@@ -91,11 +103,12 @@ export const Filter = styled.div`
     font-weight: 700;
     height: 2.25rem;
     margin-right: 1rem;
+    margin-bottom: .5rem;
 
     &:focus {
       border-color: #8925b1;
-      box-shadow: inset 0 1px 1px rgba(238,130,238, 0.5),
-          0 0 12px rgba(238,130,238, 1);
+      box-shadow: inset 0 1px 1px rgba(238, 130, 238, 0.5),
+        0 0 12px rgba(238, 130, 238, 1);
     }
   }
 
@@ -108,6 +121,21 @@ export const Filter = styled.div`
     color: var(--c);
     border: 0.1em solid var(--c);
     border-radius: 0.5em;
+    margin-bottom: .5rem;
+  }
+
+  @media (max-width: 948px) {
+    .filters {
+      flex-direction: column;
+    }
+  }
+
+  @media (max-width: 530px) {
+    width: 50%;
+
+    .selects {
+      flex-direction: column;
+    }
   }
 `;
 
