@@ -24,6 +24,12 @@ export const Container = styled.div`
       color: #d1d1d1 !important;
       font-weight: 700;
       font-size: 12pt !important;
+      display: flex;
+      align-items: center;
+    }
+
+    .nav-icon {
+      margin-right: 1rem;
     }
   }
 `;
@@ -66,8 +72,8 @@ export const Filter = styled.div`
 
       &:focus {
         border-color: #5d347b;
-        box-shadow: inset 0 1px 1px rgba(93, 52, 123, 0.5),
-          0 0 12px rgba(137, 37, 177, 1);
+        box-shadow: inset 0 1px 1px rgba(238,130,238, 0.5),
+          0 0 12px rgba(238,130,238, 1);
       }
     }
 
@@ -88,8 +94,8 @@ export const Filter = styled.div`
 
     &:focus {
       border-color: #8925b1;
-      box-shadow: inset 0 1px 1px rgba(93, 52, 123, 0.5),
-        0 0 12px rgba(137, 37, 177, 1);
+      box-shadow: inset 0 1px 1px rgba(238,130,238, 0.5),
+          0 0 12px rgba(238,130,238, 1);
     }
   }
 

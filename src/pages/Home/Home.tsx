@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import Form from "react-bootstrap/Form";
 import InputGroup from "react-bootstrap/InputGroup";
 import { FaSearch, FaHeart } from "react-icons/fa";
+import { FiLogIn, FiLogOut } from "react-icons/fi";
 import Card from "react-bootstrap/Card";
 import Spinner from "react-bootstrap/Spinner";
 import Image from "react-bootstrap/Image";
@@ -19,7 +20,7 @@ import {
   where,
 } from "firebase/firestore";
 import { Nav, OverlayTrigger, Tooltip } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 import { Container, Content, List, Filter, Error } from "./styles";
 import errorBanner from "../../assets/error.svg";
@@ -120,7 +121,7 @@ const Home = () => {
         (searchValue
           ? game.title.toLowerCase().indexOf(searchValue.toLowerCase()) !== -1
           : true) &&
-        (genre ? game.genre === genre : true)
+        (genre && genre !== "Gênero" ? game.genre === genre : true)
     );
 
     setGameList(newGameList);
@@ -238,20 +239,21 @@ const Home = () => {
     <Container>
       <header>
         <Navbar expand="lg" className="bg-body-tertiary navbar" fixed="top">
-          <Nav className="me-auto">
+          <Nav className="ms-auto">
             {!user ? (
               <Nav.Link className="link" href="/auth">
+                <FiLogIn className="nav-icon" />
                 Login
               </Nav.Link>
             ) : (
               <Nav.Link className="link" href="/" onClick={logout}>
+                <FiLogOut className="nav-icon" />
                 Sair
               </Nav.Link>
             )}
           </Nav>
         </Navbar>
         <div className="banner">
-          {/* <img src={banner} alt="banner" className="banner-image" /> */}
           <Filter>
             <div className="search-bar">
               <InputGroup className="mb-3 search-input">
@@ -371,17 +373,23 @@ const Home = () => {
                     <Card.Text className="genre">{game.genre}</Card.Text>
                   </Card.Body>
                   <Card.Footer className="card-footer">
-                    <nav>
-                      <ul>
-                        <li>
-                          Ver mais
-                          <span></span>
-                          <span></span>
-                          <span></span>
-                          <span></span>
-                        </li>
-                      </ul>
-                    </nav>
+                    <Link
+                      style={{ textDecoration: "none" }}
+                      to={game.game_url}
+                      target="_blank"
+                    >
+                      <nav>
+                        <ul>
+                          <li>
+                            Visitar site
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                          </li>
+                        </ul>
+                      </nav>
+                    </Link>
                   </Card.Footer>
                 </Card>
               );

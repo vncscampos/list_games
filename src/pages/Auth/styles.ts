@@ -12,10 +12,10 @@ export const FormColumn = styled.div`
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  color: #4b4b4b !important;
+  color: white !important;
 
   .box {
-    background: white;
+    background: #1f2334;
     padding: 5rem 1rem;
     width: 80%;
     border-radius: 8px;
@@ -50,8 +50,8 @@ export const FormColumn = styled.div`
 
     &:focus {
       border-color: #5d347b;
-      box-shadow: inset 0 1px 1px rgba(93, 52, 123, 0.5),
-        0 0 12px rgba(137, 37, 177, 1);
+      box-shadow: inset 0 1px 1px rgba(238,130,238, 0.5),
+          0 0 12px rgba(238,130,238, 1);
     }
   }
 
@@ -67,7 +67,7 @@ export const FormColumn = styled.div`
     justify-content: space-between;
 
     .text {
-      color: #8925B1;
+      color: Violet;
       cursor: pointer;
       font-weight: 700;
     }
@@ -75,9 +75,8 @@ export const FormColumn = styled.div`
     .submit-button {
       border-radius: 4px;
       border: none;
-      color: #d1d1d1;
       font-weight: 700;
-      background: #2f2e41;
+      background: Violet;
     }
   }
 `;
