@@ -1,5 +1,6 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { AxiosError } from "axios";
-import { useState, useEffect } from "react";
+import { useState, useEffect, SetStateAction } from "react";
 import Form from "react-bootstrap/Form";
 import InputGroup from "react-bootstrap/InputGroup";
 import { FaSearch, FaHeart } from "react-icons/fa";
@@ -8,8 +9,10 @@ import Card from "react-bootstrap/Card";
 import Spinner from "react-bootstrap/Spinner";
 import Image from "react-bootstrap/Image";
 import Heart from "react-animated-heart";
+import StarRatings from "react-star-ratings";
 import Navbar from "react-bootstrap/Navbar";
 import Button from "react-bootstrap/Button";
+import { signOut } from "firebase/auth";
 import {
   addDoc,
   collection,
@@ -26,46 +29,31 @@ import { Container, Content, List, Filter, Error } from "./styles";
 import errorBanner from "../../assets/error.svg";
 import api from "../../services/api";
 import { db, auth } from "../../services/firebase";
-import { signOut } from "firebase/auth";
-interface IGame {
-  id: number;
-  title: string;
-  thumbnail: string;
-  short_description: string;
-  game_url: string;
-  genre: string;
-  platform: string;
-  publisher: string;
-  developer: string;
-  release_date: string;
-  freetogame_profile_url: string;
-}
-
-interface IFavorite {
-  id?: string;
-  user_id: string;
-  game_id: number;
-}
-
-interface User {
-  id: string;
-  token: string;
-}
+import {
+  IGame,
+  IFavorite,
+  User,
+  ListRatings,
+  GameWithRate,
+} from "../../interfaces/home";
+import { calculateRating } from "../../utils/calculateRating";
+import { sortList } from "../../utils/sortList";
 
 const Home = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<User>();
-  const [loading, setLoading] = useState(false);
+  const [backupList, setBackupList] = useState<GameWithRate[]>([]);
   const [error, setError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-
-  const [games, setGameList] = useState<IGame[]>([]);
-  const [backupList, setBackupList] = useState<IGame[]>([]);
   const [favorites, setFavoriteList] = useState<IFavorite[]>([]);
-
-  const [showFavorite, setShowFavorite] = useState(false);
-  const [searchValue, setSearchValue] = useState("");
+  const [gamesWithRate, setGamesWithRate] = useState<GameWithRate[]>([]);
   const [genre, setGenre] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [orderRate, setOrderRate] = useState("");
+  const [ratings, setRatings] = useState<ListRatings[]>([]);
+  const [searchValue, setSearchValue] = useState("");
+  const [showFavorite, setShowFavorite] = useState(false);
+  const [user, setUser] = useState<User>();
+
   const genresArray = [
     "Shooter",
     "MMOARPG",
@@ -87,8 +75,8 @@ const Home = () => {
 
   useEffect(() => {
     loadUser();
+    loadRatings();
     loadList();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -103,12 +91,23 @@ const Home = () => {
     }
   }
 
+  async function loadRatings(): Promise<void> {
+    try {
+      const { docs } = await getDocs(collection(db, "ratings"));
+      const data = docs.map((doc) => ({ ...doc.data(), id: doc.id }));
+      setRatings(data as ListRatings[]);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
   function handleFilter(event?: any) {
     const typeFilter = event?.target.id;
     const value = event?.target.value;
 
     if (typeFilter === "search") setSearchValue(value);
     if (typeFilter === "genre") setGenre(value);
+    if (typeFilter === "rate") setOrderRate(value);
     if (!typeFilter) setShowFavorite(!showFavorite);
   }
 
@@ -124,8 +123,13 @@ const Home = () => {
         (genre && genre !== "Gênero" ? game.genre === genre : true)
     );
 
-    setGameList(newGameList);
-  }, [genre, searchValue, showFavorite]);
+    let sortedList: GameWithRate[] = [];
+    if(orderRate == 'Mal avaliados') sortedList = sortList(newGameList, 'asc');
+    if(orderRate === 'Bem avaliados') sortedList = sortList(newGameList, 'desc');
+    if(orderRate === 'Avaliação') sortedList = newGameList;
+
+    setGamesWithRate(sortedList);
+  }, [genre, searchValue, showFavorite, orderRate]);
 
   async function loadFavoriteList(): Promise<void> {
     try {
@@ -151,8 +155,11 @@ const Home = () => {
         },
       });
       setError(false);
-      setGameList(data);
-      setBackupList(data);
+
+      const listGames = calculateRating(ratings, data as IGame[]);
+
+      setGamesWithRate(listGames);
+      setBackupList(listGames);
     } catch (error) {
       const err = error as AxiosError;
 
@@ -235,6 +242,19 @@ const Home = () => {
     }
   }
 
+  function handleRating(newRating: number, gameId: number): void {
+    const updatedGameList = gamesWithRate.map((game) => {
+      if (game.id === gameId) {
+        game.rate.push(newRating);
+        game.average =
+          game.rate.reduce((accumulator, value) => accumulator + value, 0) /
+          game.rate.length;
+      }
+      return game;
+    });
+    setGamesWithRate(updatedGameList);
+  }
+
   return (
     <Container>
       <header>
@@ -291,6 +311,7 @@ const Home = () => {
                   aria-label="select-rating"
                   className="select-genres"
                   onChange={handleFilter}
+                  id="rate"
                 >
                   <option>Avaliação</option>
                   {ratingArray.map((r) => {
@@ -340,7 +361,7 @@ const Home = () => {
           </Error>
         ) : (
           <List>
-            {games?.map((game) => {
+            {gamesWithRate?.map((game) => {
               return (
                 <Card style={{ width: "18rem" }} className="card" key={game.id}>
                   <Card.Img
@@ -349,6 +370,7 @@ const Home = () => {
                     className="card-image"
                   />
                   <Card.Body>
+                    <Card.Title className="card-title">{game.title}</Card.Title>
                     <div className="heart-icon">
                       <Heart
                         isClick={favorites.some(
@@ -357,7 +379,16 @@ const Home = () => {
                         onClick={() => validateUser(game.id)}
                       />
                     </div>
-                    <Card.Title className="card-title">{game.title}</Card.Title>
+                    <StarRatings
+                      rating={game.average || 0}
+                      changeRating={(number) => handleRating(number, game.id)}
+                      starRatedColor="yellow"
+                      starHoverColor="khaki"
+                      numberOfStars={4}
+                      name="rating"
+                      starDimension="1.2rem"
+                      starSpacing=".1rem"
+                    />
                     <OverlayTrigger
                       placement="bottom"
                       overlay={

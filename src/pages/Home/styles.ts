@@ -194,7 +194,7 @@ export const List = styled.div`
     .heart-icon {
       right: 0;
       top: 0;
-      margin-top: 50%;
+      margin-top: 55%;
       position: absolute;
     }
 
@@ -204,6 +204,7 @@ export const List = styled.div`
       -webkit-line-clamp: 2;
       overflow: hidden;
       text-overflow: ellipsis;
+      margin-top: 1rem;
     }
 
     .genre {
