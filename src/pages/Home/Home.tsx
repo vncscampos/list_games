@@ -1,5 +1,5 @@
 import { AxiosError } from "axios";
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import Form from "react-bootstrap/Form";
 import InputGroup from "react-bootstrap/InputGroup";
 import { FaSearch, FaHeart } from "react-icons/fa";
