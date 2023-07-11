@@ -1,5 +1,5 @@
 import { AxiosError } from "axios";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Form from "react-bootstrap/Form";
 import InputGroup from "react-bootstrap/InputGroup";
 import { FaSearch, FaHeart } from "react-icons/fa";
@@ -102,21 +102,16 @@ const Home = () => {
     }
   }
 
-  function handleFilter(event?: any): void {
+  function handleFilter(event?: any) {
     const typeFilter = event?.target.id;
     const value = event?.target.value;
 
     if (typeFilter === "search") setSearchValue(value);
     if (typeFilter === "genre") setGenre(value);
     if (!typeFilter) setShowFavorite(!showFavorite);
+  }
 
-    console.group("Inputs");
-    console.log("value", value);
-    console.log("typeFilter", typeFilter);
-    console.log("genre", genre, "search", searchValue);
-    console.log("showFavorite", showFavorite);
-    console.groupEnd();
-
+  useEffect(() => {
     const newGameList = backupList.filter(
       (game) =>
         (showFavorite
@@ -128,10 +123,8 @@ const Home = () => {
         (genre ? game.genre === genre : true)
     );
 
-    console.log("newGameList", newGameList);
-
     setGameList(newGameList);
-  }
+  }, [genre, searchValue, showFavorite]);
 
   async function loadFavoriteList(): Promise<void> {
     try {
