@@ -20,6 +20,7 @@ import {
   doc,
   getDocs,
   query,
+  setDoc,
   where,
 } from "firebase/firestore";
 import { Nav, OverlayTrigger, Tooltip } from "react-bootstrap";
@@ -49,7 +50,6 @@ const Home = () => {
   const [genre, setGenre] = useState("");
   const [loading, setLoading] = useState(false);
   const [orderRate, setOrderRate] = useState("");
-  const [ratings, setRatings] = useState<ListRatings[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const [showFavorite, setShowFavorite] = useState(false);
   const [user, setUser] = useState<User>();
@@ -75,7 +75,6 @@ const Home = () => {
 
   useEffect(() => {
     loadUser();
-    loadRatings();
     loadList();
   }, []);
 
@@ -83,45 +82,7 @@ const Home = () => {
     if (user) loadFavoriteList();
   }, [user]);
 
-  async function loadUser() {
-    const localUser = localStorage.getItem("user");
-    if (localUser) {
-      const parsedUser: User = JSON.parse(localUser);
-      setUser(parsedUser);
-    }
-  }
-
-  async function loadRatings(): Promise<void> {
-    try {
-      const { docs } = await getDocs(collection(db, "ratings"));
-      const data = docs.map((doc) => ({ ...doc.data(), id: doc.id }));
-      setRatings(data as ListRatings[]);
-    } catch (err) {
-      console.error(err);
-    }
-  }
-
-  function handleFilter(event?: any) {
-    const typeFilter = event?.target.id;
-    const value = event?.target.value;
-
-    console.log("value");
-
-    if (typeFilter === "search") setSearchValue(value);
-    if (typeFilter === "genre") setGenre(value);
-    if (typeFilter === "rate") setOrderRate(value);
-    if (!typeFilter) setShowFavorite(!showFavorite);
-  }
-
-  function clearFilter(): void {
-    setGenre("Gênero");
-    setSearchValue("");
-    setOrderRate("Avaliação");
-    setShowFavorite(false);
-  }
-
   useEffect(() => {
-    console.log(genre, orderRate, searchValue);
     const newGameList = backupList.filter(
       (game) =>
         (showFavorite
@@ -134,13 +95,75 @@ const Home = () => {
     );
 
     let sortedList: GameWithRate[] = [];
-    if (orderRate == "Mal avaliados") sortedList = sortList(newGameList, "asc");
+    if (orderRate === "Mal avaliados")
+      sortedList = sortList(newGameList, "asc");
     if (orderRate === "Bem avaliados")
       sortedList = sortList(newGameList, "desc");
-    if (orderRate === "Avaliação") sortedList = newGameList;
+    if (orderRate === "" || orderRate === "Avaliação") sortedList = newGameList;
 
     setGamesWithRate(sortedList);
+
+    if (backupList.length > 0 && sortedList.length === 0) {
+      setError(true);
+      setErrorMessage("Não encontramos nenhum jogo.");
+    }
   }, [genre, searchValue, showFavorite, orderRate]);
+
+  async function addFavorite(game_id: number, user_id: string) {
+    try {
+      const documentExists = checkExistingDocument(game_id, user_id);
+      if (documentExists) {
+        removeFavorite(game_id);
+      } else {
+        const { id } = await addDoc(collection(db, "favorite"), {
+          game_id,
+          user_id,
+        });
+        setFavoriteList([...favorites, { id, game_id, user_id }]);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  function checkExistingDocument(gameId: number, userId: string): boolean {
+    return !!favorites.find(
+      (f) => f.game_id === gameId && f.user_id === userId
+    );
+  }
+
+  function clearFilter(): void {
+    setGenre("Gênero");
+    setSearchValue("");
+    setOrderRate("Avaliação");
+    setShowFavorite(false);
+  }
+
+  function handleFilter(event?: any) {
+    const typeFilter = event?.target.id;
+    const value = event?.target.value;
+
+    if (typeFilter === "search") setSearchValue(value);
+    if (typeFilter === "genre") setGenre(value);
+    if (typeFilter === "rate") setOrderRate(value);
+    if (!typeFilter) setShowFavorite(!showFavorite);
+
+    setError(false);
+  }
+
+  function handleRating(newRating: number, gameId: number): void {
+    const updatedGameList = gamesWithRate.map((game) => {
+      if (game.id === gameId) {
+        game.rate.push(newRating);
+        game.average =
+          game.rate.reduce((accumulator, value) => accumulator + value, 0) /
+          game.rate.length;
+        updateGameRating(game);
+      }
+      return game;
+    });
+    setGamesWithRate(updatedGameList);
+  }
 
   async function loadFavoriteList(): Promise<void> {
     try {
@@ -158,16 +181,14 @@ const Home = () => {
 
   async function loadList(): Promise<void> {
     setLoading(true);
+
     try {
-      const { data } = await api.get("/data", {
-        timeout: 5000,
-        headers: {
-          "dev-email-address": "dev@email.com",
-        },
-      });
+      const ratings = (await loadRatings()) as ListRatings[];
+      const { data } = await api.get("/data");
+
       setError(false);
 
-      const listGames = calculateRating(ratings, data as IGame[]);
+      const listGames = await calculateRating(ratings, data as IGame[]);
 
       setGamesWithRate(listGames);
       setBackupList(listGames);
@@ -200,27 +221,29 @@ const Home = () => {
     setLoading(false);
   }
 
-  function validateUser(game_id: number): void {
-    if (!user) {
-      alert("Você deve logar antes.");
-      navigate("/auth");
-      return;
+  async function loadUser() {
+    const localUser = localStorage.getItem("user");
+    if (localUser) {
+      const parsedUser: User = JSON.parse(localUser);
+      setUser(parsedUser);
     }
-    addFavorite(game_id, user.id);
   }
 
-  async function addFavorite(game_id: number, user_id: string) {
+  async function loadRatings(): Promise<ListRatings[] | undefined> {
     try {
-      const documentExists = checkExistingDocument(game_id, user_id);
-      if (documentExists) {
-        removeFavorite(game_id);
-      } else {
-        const { id } = await addDoc(collection(db, "favorite"), {
-          game_id,
-          user_id,
-        });
-        setFavoriteList([...favorites, { id, game_id, user_id }]);
-      }
+      const { docs } = await getDocs(collection(db, "ratings"));
+      const data = docs.map((doc) => ({ ...doc.data(), id: doc.id }));
+      return data as ListRatings[];
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async function logout(): Promise<void> {
+    try {
+      setUser(undefined);
+      localStorage.clear();
+      await signOut(auth);
     } catch (err) {
       console.error(err);
     }
@@ -237,33 +260,23 @@ const Home = () => {
     }
   }
 
-  function checkExistingDocument(gameId: number, userId: string): boolean {
-    return !!favorites.find(
-      (f) => f.game_id === gameId && f.user_id === userId
-    );
-  }
-
-  async function logout(): Promise<void> {
+  async function updateGameRating(game: GameWithRate) {
     try {
-      setUser(undefined);
-      localStorage.clear();
-      await signOut(auth);
+      const docRef = doc(db, "ratings", `${game.id}`);
+      setDoc(docRef, { ratingsList: game.rate });
     } catch (err) {
       console.error(err);
     }
   }
 
-  function handleRating(newRating: number, gameId: number): void {
-    const updatedGameList = gamesWithRate.map((game) => {
-      if (game.id === gameId) {
-        game.rate.push(newRating);
-        game.average =
-          game.rate.reduce((accumulator, value) => accumulator + value, 0) /
-          game.rate.length;
-      }
-      return game;
-    });
-    setGamesWithRate(updatedGameList);
+  function validateUser(game_id: number, rating?: number): void {
+    if (!user) {
+      alert("Você deve logar antes.");
+      navigate("/auth");
+      return;
+    }
+    if (rating) handleRating(rating, game_id);
+    else addFavorite(game_id, user.id);
   }
 
   return (
@@ -294,7 +307,6 @@ const Home = () => {
                 <Form.Control
                   className="search-input"
                   placeholder="Pesquise pelo nome do jogo"
-                  aria-label="Pesquise pelo nome do jogo"
                   onChange={handleFilter}
                   id="search"
                   value={searchValue}
@@ -305,10 +317,10 @@ const Home = () => {
             <div className="filters">
               <div className="selects">
                 <Form.Select
-                  aria-label="select-genre"
+                  as="select"
                   className="select-genres"
                   onChange={handleFilter}
-                  defaultValue={genre}
+                  value={genre}
                   id="genre"
                 >
                   <option>Gênero</option>
@@ -321,11 +333,11 @@ const Home = () => {
                   })}
                 </Form.Select>
                 <Form.Select
-                  aria-label="select-rating"
+                  as="select"
                   className="select-genres"
                   onChange={handleFilter}
                   id="rate"
-                  defaultValue="Avaliação"
+                  value={orderRate}
                 >
                   <option>Avaliação</option>
                   {ratingArray.map((r) => {
@@ -344,6 +356,7 @@ const Home = () => {
                     color: showFavorite ? "white" : "Violet",
                   }}
                   onClick={handleFilter}
+                  disabled={!user}
                 >
                   <FaHeart />
                   Favoritos
@@ -367,9 +380,13 @@ const Home = () => {
           <Error>
             <h1>
               {errorMessage}{" "}
-              <span className="refresh" onClick={() => loadList()}>
-                Tentar de novo
-              </span>
+              {errorMessage !== "Não encontramos nenhum jogo." ? (
+                <span className="refresh" onClick={() => loadList()}>
+                  Tentar de novo
+                </span>
+              ) : (
+                ""
+              )}
             </h1>
             <Image
               className="image-error"
@@ -400,11 +417,11 @@ const Home = () => {
                     </div>
                     <StarRatings
                       rating={game.average || 0}
-                      changeRating={(number) => handleRating(number, game.id)}
+                      changeRating={(number) => validateUser(game.id, number)}
                       starRatedColor="yellow"
                       starHoverColor="khaki"
                       numberOfStars={4}
-                      name="rating"
+                      name="avaliação"
                       starDimension="1.2rem"
                       starSpacing=".1rem"
                     />

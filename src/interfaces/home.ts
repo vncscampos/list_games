@@ -25,8 +25,7 @@ export interface User {
 
 export interface ListRatings {
   id: string;
-  game_id: number;
-  rate: [number];
+  ratingsList: [number];
 }
 
 export interface GameWithRate extends IGame {

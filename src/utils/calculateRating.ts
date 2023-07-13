@@ -5,12 +5,12 @@ export function calculateRating(
   games: IGame[]
 ): GameWithRate[] {
   const newList = games.map((g) => {
-    const r = listRatings.find((r) => r.game_id === g.id);
-    if (r && r.rate.length > 0) {
+    const r = listRatings.find((r) => Number(r.id) === g.id);
+    if (r && r.ratingsList.length > 0) {
       const avr =
-        r.rate.reduce((accumulator, value) => accumulator + value, 0) /
-        r.rate.length;
-      return { ...g, rate: r.rate, average: avr };
+        r.ratingsList.reduce((accumulator, value) => accumulator + value, 0) /
+        r.ratingsList.length;
+      return { ...g, rate: r.ratingsList, average: avr };
     }
     return { ...g, rate: [], average: 0 };
   });

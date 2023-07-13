@@ -27,5 +27,7 @@ export function sortList(
       }
   });
 
+  console.log(sortedArr)
+
   return sortedArr;
 }
