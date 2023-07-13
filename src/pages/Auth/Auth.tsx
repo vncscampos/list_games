@@ -9,6 +9,7 @@ import {
 } from "firebase/auth";
 import { FaInfo } from "react-icons/fa";
 import { InputGroup, OverlayTrigger, Tooltip } from "react-bootstrap";
+import Spinner from "react-bootstrap/Spinner";
 
 import { Container, BannerColumn, FormColumn } from "./styles";
 import { auth } from "../../services/firebase";
@@ -20,6 +21,7 @@ type FormData = {
 
 const Auth = () => {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
   const [isCreateAccount, setIsCreateAccount] = useState(false);
   const [messageError, setMessageError] = useState("");
   const {
@@ -39,6 +41,7 @@ const Auth = () => {
     e: React.MouseEvent<HTMLButtonElement, MouseEvent>
   ): void {
     e.preventDefault();
+    setLoading(true);
     if (isCreateAccount) {
       createUser(data);
     } else {
@@ -54,6 +57,7 @@ const Auth = () => {
     } catch (err) {
       setMessageError("Falha ao criar usuário. Tente novamente.");
     }
+    setLoading(false);
   }
 
   async function signInUser({ email, password }: FormData): Promise<void> {
@@ -67,6 +71,7 @@ const Auth = () => {
     } catch (err) {
       setMessageError("Falha ao logar. Tente novamente.");
     }
+    setLoading(false);
   }
 
   return (
@@ -119,12 +124,16 @@ const Auth = () => {
                   className="submit-button"
                   variant="primary"
                   type="submit"
-                  disabled={!isValid || !isDirty}
+                  disabled={!isValid || !isDirty || loading}
                   onClick={(event) =>
                     handleSubmit((data) => onSubmit(data, event))(event)
                   }
                 >
-                  Criar conta
+                  {loading ? (
+                    <Spinner animation="border" variant="light" size="sm" />
+                  ) : (
+                    "Criar conta"
+                  )}
                 </Button>
               </>
             ) : (
@@ -138,13 +147,17 @@ const Auth = () => {
 
                 <Button
                   className="submit-button"
-                  disabled={!isValid || !isDirty}
+                  disabled={!isValid || !isDirty || loading}
                   variant="primary"
                   onClick={(event) =>
                     handleSubmit((data) => onSubmit(data, event))(event)
                   }
                 >
-                  Entrar
+                  {loading ? (
+                    <Spinner animation="border" variant="light" size="sm" />
+                  ) : (
+                    "Entrar"
+                  )}
                 </Button>
               </>
             )}

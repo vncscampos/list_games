@@ -107,7 +107,7 @@ const Home = () => {
       setError(true);
       setErrorMessage("Não encontramos nenhum jogo.");
     }
-  }, [genre, searchValue, showFavorite, orderRate]);
+  }, [genre, searchValue, showFavorite, orderRate, favorites]);
 
   async function addFavorite(game_id: number, user_id: string) {
     try {
@@ -246,6 +246,7 @@ const Home = () => {
       await signOut(auth);
     } catch (err) {
       console.error(err);
+      alert('Falha ao sair da conta. Tente novamente.')
     }
   }
 
@@ -290,7 +291,7 @@ const Home = () => {
                 Login
               </Nav.Link>
             ) : (
-              <Nav.Link className="link" href="/" onClick={logout}>
+              <Nav.Link className="link" onClick={logout}>
                 <FiLogOut className="nav-icon" />
                 Sair
               </Nav.Link>

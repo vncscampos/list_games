@@ -77,6 +77,7 @@ export const FormColumn = styled.div`
       border: none;
       font-weight: 700;
       background: Violet;
+      padding: .5rem 2rem;
     }
   }
 `;
