@@ -244,6 +244,7 @@ const Home = () => {
       setUser(undefined);
       localStorage.clear();
       await signOut(auth);
+      window.location.reload();
     } catch (err) {
       console.error(err);
       alert('Falha ao sair da conta. Tente novamente.')
